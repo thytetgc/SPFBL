@@ -62,12 +62,12 @@ echo
 echo "Exportando Blacklist de e-mails recebidos do SPFBL + KYAFILTER"
 mv /tmp/pmg_blacklist_emails /tmp/pmg_blacklist_emails_$(date "+%d%m%Y%H%M%") >/dev/null 2>&1
 spfbl block show |sort | cut -d '>' -f 1 | sed '/^@/d' | sed '/^\./d' | uniq > /tmp/pmg_blacklist_emails
-#spfbl block show |sort | cut -d '>' -f 1 | sed '/^@/d' | sed '/^\./d' | uniq | sed 's/^/@/' | sed 's/$/;PASS/' > /tmp/blacklist_emails
+#spfbl block show |sort | cut -d '>' -f 1 | sed '/^@/d' | sed '/^\./d' | uniq | sed 's/^/@/' > /tmp/blacklist_emails
 
 echo
 echo "Exportando Blacklist de dominios recebidos do SPFBL + KYAFILTER"
 spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq > /tmp/pmg_blacklist_domains
-#spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq | sed 's/^/@/' | sed 's/$/;PASS/' > /tmp/blacklist_domains
+#spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq | sed 's/^/@/' > /tmp/blacklist_domains
 
 echo
 echo "Limpando Blacklist atual de e-mails recebidos"
