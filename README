@@ -23,3 +23,5 @@ cat /tmp/block.txt | while read LINHA; do spfbl superblock add "${LINHA}" >/dev/
 #Importar Dynamiclist
 curl -k https://raw.githubusercontent.com/thytetgc/SPFBL/main/dynamic.txt > /tmp/dynamic.txt
 cat /tmp/dynamic.txt | while read LINHA; do spfbl dynamic add "${LINHA}" >/dev/null 2>&1; done
+
+
