@@ -1,0 +1,73 @@
+#!/bin/bash
+#+----------------GERANDO LOG-----------------------+OK"
+SCRIPT=`basename $0`
+LOG=`echo /opt/spfbl/$SCRIPT.log | sed s/'.sh'/'.log'/g`
+exec &> >(tee -a "$LOG")
+echo "[`date`] ==== Inicio de rotina..."
+#+----------------GERANDO LOG-----------------------+OK"
+
+clear
+
+	dir="Diretorio Atual		 : `pwd`"
+	hostname="Hostname			 : `hostname --fqdn`"
+	ip="IP						 : `wget -qO - icanhazip.com`"
+	#ip="IP						 : `ifconfig | awk 'NR>=2 && NR<=2' | awk '{print $3}'`"
+    versaoso="Versao S.O.		 : `lsb_release -d | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+	release="Release			 : `lsb_release -r | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+	codename="Codename			 : `lsb_release -c | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+	kernel="Kernel				 : `uname -r`"
+	arquitetura="Arquitetura	 : `uname -m`"
+	versaospfbl="Versao SPFBL    : `spfbl version`"
+    echo "+-------------------------------------------------+"
+    echo "|           Utilitario para SPFBL  v1.37          |"
+    echo "+-------------------------------------------------+"
+    echo "+-------------------------------------------------+"
+    echo "| Escrito por:                                    |"
+    echo "| Thiago Castro - www.hostlp.cloud                |"
+    echo "+-------------------------------------------------+"
+    echo
+    echo $dir
+	echo "+-------------------------------------------------+"
+	echo $hostname
+	echo "+-------------------------------------------------+"
+	echo $ip
+	echo "+-------------------------------------------------+"
+	echo $versaoso
+	echo "+-------------------------------------------------+"
+	echo $release
+	echo "+-------------------------------------------------+"
+	echo $codename
+	echo "+-------------------------------------------------+"
+    echo $kernel
+	echo "+-------------------------------------------------+"
+    echo $arquitetura
+	echo "+-------------------------------------------------+"
+	echo $versaospfbl
+	echo "+-------------------------------------------------+"
+	echo
+	echo "Aperte <ENTER> para continuar e começar..."
+	read 
+	sleep 5
+	echo
+	echo "==================EXECUTANDO======================="
+	echo
+
+# Use o comando pmgsh get /config/ruledb/who/
+# para pegar a WHO correta
+WHO_DM="89"
+cd /tmp/
+
+echo
+echo "Exportando Whitelist de dominios Internos do SPFBL + KYAFILTER"
+spfbl white show sender |sort | cut -d '@' -f 3 | sed '/^$/d' |sort |uniq > /tmp/pmg_whitelist_domains_internos
+
+echo
+echo "Limpando Whitelist atual de dominios Internos"
+pmgsh get /config/ruledb/who/"$WHO_DM"/objects | sort |grep id | cut -d : -f 2- | sed 's/[ \t]*//;s/[ \t]*"//' | sed 's/[ \t]*//;s/[ \t]*"//' | sed 's/[ \t]*//;s/[ \t]*,//' > /tmp/del_list
+for DEL in `cat /tmp/del_list`; do pmgsh delete /config/ruledb/who/"$WHO_EM"/objects/$DEL; done >/dev/null 2>&1
+
+echo
+echo "Importando Whitelist de dominios Internos para PMG"
+while read whitelist ; do pmgsh create /config/ruledb/who/"$WHO_DM"/domain --domain "$whitelist" ; done < /tmp/pmg_whitelist_domains_internos >/dev/null 2>&1
+
+echo "[`date`] ==== Fim de rotina..."
