@@ -1,0 +1,93 @@
+#!/bin/bash
+#+----------------GERANDO LOG-----------------------+OK"
+SCRIPT=`basename $0`
+LOG=`echo /opt/spfbl/$SCRIPT.log | sed s/'.sh'/'.log'/g`
+exec &> >(tee -a "$LOG")
+echo "[`date`] ==== Inicio de rotina..."
+#+----------------GERANDO LOG-----------------------+OK"
+
+clear
+
+	dir="Diretorio Atual		 : `pwd`"
+	hostname="Hostname			 : `hostname --fqdn`"
+	ip="IP						 : `wget -qO - icanhazip.com`"
+	#ip="IP						 : `ifconfig | awk 'NR>=2 && NR<=2' | awk '{print $3}'`"
+    versaoso="Versao S.O.		 : `lsb_release -d | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+	release="Release			 : `lsb_release -r | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+	codename="Codename			 : `lsb_release -c | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+	kernel="Kernel				 : `uname -r`"
+	arquitetura="Arquitetura	 : `uname -m`"
+	versaospfbl="Versao SPFBL    : `spfbl version`"
+    echo "+-------------------------------------------------+"
+    echo "|           Utilitario para SPFBL  v1.37          |"
+    echo "+-------------------------------------------------+"
+    echo "+-------------------------------------------------+"
+    echo "| Escrito por:                                    |"
+    echo "| Thiago Castro - www.hostlp.cloud                |"
+    echo "+-------------------------------------------------+"
+    echo
+    echo $dir
+	echo "+-------------------------------------------------+"
+	echo $hostname
+	echo "+-------------------------------------------------+"
+	echo $ip
+	echo "+-------------------------------------------------+"
+	echo $versaoso
+	echo "+-------------------------------------------------+"
+	echo $release
+	echo "+-------------------------------------------------+"
+	echo $codename
+	echo "+-------------------------------------------------+"
+    echo $kernel
+	echo "+-------------------------------------------------+"
+    echo $arquitetura
+	echo "+-------------------------------------------------+"
+	echo $versaospfbl
+	echo "+-------------------------------------------------+"
+	echo
+	echo "Aperte <ENTER> para continuar e começar..."
+	read 
+	sleep 5
+	echo
+	echo "==================EXECUTANDO======================="
+	echo
+
+# Use o comando pmgsh get /config/ruledb/who/
+# para pegar a WHO correta
+WHO_EM="83"
+WHO_DM="29"
+cd /tmp/
+
+echo
+echo "Exportando Blacklist de e-mails recebidos do SPFBL + KYAFILTER"
+mv /tmp/pmg_blacklist_emails /tmp/pmg_blacklist_emails_$(date "+%d%m%Y%H%M%") >/dev/null 2>&1
+spfbl block show |sort | cut -d '>' -f 1 | sed '/^@/d' | sed '/^\./d' | uniq > /tmp/pmg_blacklist_emails
+#spfbl block show |sort | cut -d '>' -f 1 | sed '/^@/d' | sed '/^\./d' | uniq | sed 's/^/@/' | sed 's/$/;PASS/' > /tmp/blacklist_emails
+
+echo
+echo "Exportando Blacklist de dominios recebidos do SPFBL + KYAFILTER"
+spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq > /tmp/pmg_blacklist_domains
+#spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq | sed 's/^/@/' | sed 's/$/;PASS/' > /tmp/blacklist_domains
+
+echo
+echo "Limpando Blacklist atual de e-mails recebidos"
+pmgsh get /config/ruledb/who/"$WHO_EM"/objects | sort |grep id | cut -d : -f 2- | sed 's/[ \t]*//;s/[ \t]*"//' | sed 's/[ \t]*//;s/[ \t]*"//' | sed 's/[ \t]*//;s/[ \t]*,//' > /tmp/del_list
+for DEL in `cat /tmp/del_list`; do pmgsh delete /config/ruledb/who/"$WHO_EM"/objects/$DEL; done >/dev/null 2>&1
+
+echo
+echo "Limpando Blacklist atual de domains recebidos"
+pmgsh get /config/ruledb/who/"$WHO_DM"/objects | sort |grep id | cut -d : -f 2- | sed 's/[ \t]*//;s/[ \t]*"//' | sed 's/[ \t]*//;s/[ \t]*"//' | sed 's/[ \t]*//;s/[ \t]*,//' > /tmp/del_list
+for DEL in `cat /tmp/del_list`; do pmgsh delete /config/ruledb/who/"$WHO_EM"/objects/$DEL; done >/dev/null 2>&1
+
+echo
+echo "Importando Blacklist de e-mails recebidos para PMG"
+pmgsh create /config/ruledb/who/"$WHO_EM"/regex --regex "root@*.*" >/dev/null 2>&1
+pmgsh create /config/ruledb/who/"$WHO_EM"/regex --regex "www-data@*.*" >/dev/null 2>&1
+pmgsh create /config/ruledb/who/"$WHO_EM"/regex --regex "www@*.*" >/dev/null 2>&1
+while read blacklist ; do pmgsh create /config/ruledb/who/"$WHO_EM"/email --email "$blacklist" ; done < /tmp/pmg_blacklist_emails >/dev/null 2>&1
+
+echo
+echo "Importando Blacklist de dominios recebidos para PMG"
+while read blacklist ; do pmgsh create /config/ruledb/who/"$WHO_DM"/domain --domain "$blacklist" ; done < /tmp/pmg_blacklist_domains >/dev/null 2>&1
+
+echo "[`date`] ==== Fim de rotina..."
