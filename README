@@ -1,0 +1,8 @@
+# Importar Whitelist
+curl -k https://raw.githubusercontent.com/thytetgc/SPFBL/main/white.txt > /tmp/white.txt
+cat /tmp/white.txt | while read LINHA; do spfbl superwhite add "${LINHA}" >/dev/null 2>&1; done
+
+#Importar Blacklist
+curl -k https://raw.githubusercontent.com/thytetgc/SPFBL/main/block.txt > /tmp/block.txt
+cat /tmp/block.txt | while read LINHA; do spfbl superblock add "${LINHA}" >/dev/null 2>&1; done
+
