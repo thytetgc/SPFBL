@@ -24,4 +24,19 @@ cat /tmp/block.txt | while read LINHA; do spfbl superblock add "${LINHA}" >/dev/
 curl -k https://raw.githubusercontent.com/thytetgc/SPFBL/main/dynamic.txt > /tmp/dynamic.txt
 cat /tmp/dynamic.txt | while read LINHA; do spfbl dynamic add "${LINHA}" >/dev/null 2>&1; done
 
+--------------------------------------------------------------------------------------------------
 
+#Exporta lista White e importa para Super White
+spfbl white show |sort | cut -d ';' -f 1 |grep "^@" | tr -d "@" | sed 's/^.$//' |uniq | sed 's/^/@/' | sed 's/$/;PASS/' > /tmp/whitelist_domains
+spfbl white show |sort | cut -d ';' -f 1 |grep "^@" | tr -d "@" | sed 's/^.$//' |uniq | sed 's/^/@/' | sed 's/$/;BULK/' >> /tmp/whitelist_domains
+cat /tmp/whitelist_domains | while read LINHA; do spfbl superwhite add "${LINHA}"; done
+
+#Exporta lista Block e importa para Super Block
+spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq | sed 's/^/@/' > /tmp/blacklist_domains
+cat /tmp/blacklist_domains | while read LINHA; do spfbl superblock add "${LINHA}"; done
+
+#Limpa da White o que foi para Super White
+cat /tmp/whitelist_domains | while read LINHA; do spfbl white drop "${LINHA}"; done
+
+#Limpa da Block o que foi para Super Block
+cat /tmp/blacklist_domains | while read LINHA; do spfbl block drop "${LINHA}"; done
