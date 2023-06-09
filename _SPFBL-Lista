@@ -1,0 +1,73 @@
+#!/bin/bash
+#+----------------GERANDO LOG-----------------------+OK"
+SCRIPT=`basename $0`
+LOG=`echo /opt/spfbl/$SCRIPT.log | sed s/'.sh'/'.log'/g`
+exec &> >(tee -a "$LOG")
+echo "[`date`] ==== Inicio de rotina..."
+#+----------------GERANDO LOG-----------------------+OK"
+
+clear
+
+        dir="Diretorio Atual             : `pwd`"
+        hostname="Hostname                       : `hostname --fqdn`"
+        ip="IP                                           : `wget -qO - icanhazip.com`"
+        #ip="IP                                          : `ifconfig | awk 'NR>=2 && NR<=2' | awk '{print $3}'`"
+    versaoso="Versao S.O.                : `lsb_release -d | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+        release="Release                         : `lsb_release -r | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+        codename="Codename                       : `lsb_release -c | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
+        kernel="Kernel                           : `uname -r`"
+        arquitetura="Arquitetura         : `uname -m`"
+        versaospfbl="Versao SPFBL    : `spfbl version | sed -n '1p'`"
+    echo "+-------------------------------------------------+"
+    echo "|           Utilitario para SPFBL  v1.37          |"
+    echo "+-------------------------------------------------+"
+    echo "+-------------------------------------------------+"
+    echo "| Escrito por:                                    |"
+    echo "| Thiago Castro - www.hostlp.cloud                |"
+    echo "+-------------------------------------------------+"
+    echo
+    echo $dir
+        echo "+-------------------------------------------------+"
+        echo $hostname
+        echo "+-------------------------------------------------+"
+        echo $ip
+        echo "+-------------------------------------------------+"
+        echo $versaoso
+        echo "+-------------------------------------------------+"
+        echo $release
+        echo "+-------------------------------------------------+"
+        echo $codename
+        echo "+-------------------------------------------------+"
+    echo $kernel
+        echo "+-------------------------------------------------+"
+    echo $arquitetura
+        echo "+-------------------------------------------------+"
+        echo $versaospfbl
+        echo "+-------------------------------------------------+"
+        echo
+#       echo "Aperte <ENTER> para continuar e começar..."
+#       read
+        sleep 5
+        echo
+        echo "==================EXECUTANDO======================="
+        echo
+
+
+echo
+echo "Exportando lista SPFBL White"
+spfbl white show |sort | cut -d ';' -f 1 |grep "^@" | tr -d "@" | sed 's/^.$//' |uniq | sed 's/^/@/' | sed 's/$/;PASS/' > /tmp/whitelist_domains
+spfbl white show |sort | cut -d ';' -f 1 |grep "^@" | tr -d "@" | sed 's/^.$//' |uniq | sed 's/^/@/' | sed 's/$/;BULK/' >> /tmp/whitelist_domains
+
+echo
+echo "Importando para SPFBL Super White"
+cat /tmp/whitelist_domains | while read LINHA; do spfbl superwhite add "${LINHA}"; done >/dev/null 2>&1
+
+echo
+echo "Exportando lista SPFBL Block"
+spfbl block show |sort | cut -d ';' -f 1 | egrep -v ">" | sed 's/^.//' |uniq | sed 's/^/@/' > /tmp/blacklist_domains
+
+echo
+echo "Importando para SPFBL Super Block"
+cat /tmp/blacklist_domains | while read LINHA; do spfbl superblock add "${LINHA}"; done >/dev/null 2>&1
+
+echo "[`date`] ==== Fim de rotina..."
