@@ -17,7 +17,7 @@ clear
 	codename="Codename			 : `lsb_release -c | cut -d : -f 2- | sed 's/^[ \t]*//;s/[ \t]*$//'`"
 	kernel="Kernel				 : `uname -r`"
 	arquitetura="Arquitetura	 : `uname -m`"
-	versaospfbl="Versao SPFBL    : `spfbl version`"
+	versaospfbl="Versao SPFBL    : `spfbl version | sed -n '1p'`"
     echo "+-------------------------------------------------+"
     echo "|           Utilitario para SPFBL  v1.37          |"
     echo "+-------------------------------------------------+"
