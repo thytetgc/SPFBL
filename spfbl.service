@@ -1,0 +1,23 @@
+### BEGIN INIT INFO
+# Provides:          spfbl
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: spfbl
+### END INIT INFO
+
+[Unit]
+Description=Kya Filter
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/etc/init.d/spfbl-init start
+ExecStop=/etc/init.d/spfbl-init stop
+ExecReload=/bin/kill -HUP spfbl
+Restart=on-abort
+LimitNOFILE=524288
+
+[Install]
+WantedBy=multi-user.target
